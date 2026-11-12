@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'theme/app_theme.dart';
-import 'screens/dashboard_screen.dart';
 import 'providers/transaction_provider.dart';
+import 'screens/main_navigation_screen.dart';
 
 void main() {
   runApp(
@@ -24,7 +24,7 @@ class MoneyMateApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'MoneyMate',
       theme: AppTheme.lightTheme,
-      home: const DashboardScreen(),
+      home: const MainNavigationScreen(),
     );
   }
 }

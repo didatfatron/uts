@@ -1,213 +1,275 @@
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
 import '../theme/app_theme.dart';
+import '../models/transaction.dart';
+import '../providers/transaction_provider.dart';
 
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
 
+  String _formatCurrency(double amount) {
+    final formatted = amount.toStringAsFixed(0);
+    final result = formatted.replaceAllMapped(
+      RegExp(r'\B(?=(\d{3})+(?!\d))'),
+      (match) => '.',
+    );
+
+    return 'Rp $result';
+  }
+
+  IconData _categoryIcon(String category) {
+    switch (category.toLowerCase()) {
+      case 'food':
+        return Icons.restaurant;
+      case 'transport':
+        return Icons.directions_car;
+      case 'shopping':
+        return Icons.shopping_bag_outlined;
+      case 'bills':
+        return Icons.receipt_long;
+      case 'entertainment':
+        return Icons.movie_outlined;
+      case 'salary':
+        return Icons.account_balance_wallet;
+      default:
+        return Icons.payments_outlined;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header
-              Row(
+    return Consumer<TransactionProvider>(
+      builder: (context, provider, child) {
+        final transactions = provider.transactions;
+        final recentTransactions = transactions.reversed.take(3).toList();
+
+        return Scaffold(
+          body: SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const CircleAvatar(
-                    radius: 24,
-                    backgroundColor: AppTheme.mint,
-                    child: Icon(
-                      Icons.person,
-                      color: AppTheme.navy,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  const Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Welcome back,',
-                          style: TextStyle(
-                            color: AppTheme.textGrey,
-                            fontSize: 13,
-                          ),
-                        ),
-                        Text(
-                          'MoneyMate User 👋',
-                          style: TextStyle(
-                            color: AppTheme.navy,
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  IconButton(
-                    onPressed: () {},
-                    icon: const Icon(
-                      Icons.notifications_none_rounded,
-                      color: AppTheme.navy,
-                      size: 28,
-                    ),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 28),
-
-              const Text(
-                'My Balance',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: AppTheme.textGrey,
-                ),
-              ),
-
-              const SizedBox(height: 12),
-
-              // Balance Card
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  color: AppTheme.navy,
-                  borderRadius: BorderRadius.circular(24),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Row(
-                      children: [
-                        Icon(
-                          Icons.account_balance_wallet_outlined,
-                          color: AppTheme.mint,
-                        ),
-                        SizedBox(width: 8),
-                        Text(
-                          'Total Balance',
-                          style: TextStyle(
-                            color: Colors.white70,
-                            fontSize: 14,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    const Text(
-                      'Rp 5.250.000',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 30,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    Row(
-                      children: [
-                        const Icon(
-                          Icons.trending_up,
-                          color: AppTheme.mint,
-                        ),
-                        const SizedBox(width: 6),
-                        Text(
-                          'Your finances at a glance',
-                          style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.8),
-                            fontSize: 12,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 24),
-
-              // Income and Expense
-              LayoutBuilder(
-                builder: (context, constraints) {
-
-                  return Row(
+                  // Header
+                  Row(
                     children: [
-                      Expanded(
-                        child: _SummaryCard(
-                          title: 'Income',
-                          amount: 'Rp 7.000.000',
-                          icon: Icons.arrow_downward_rounded,
-                          color: Colors.green,
+                      const CircleAvatar(
+                        radius: 24,
+                        backgroundColor: AppTheme.mint,
+                        child: Icon(
+                          Icons.person,
+                          color: AppTheme.navy,
                         ),
                       ),
                       const SizedBox(width: 12),
-                      Expanded(
-                        child: _SummaryCard(
-                          title: 'Expense',
-                          amount: 'Rp 1.750.000',
-                          icon: Icons.arrow_upward_rounded,
-                          color: AppTheme.expense,
+                      const Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Welcome back,',
+                              style: TextStyle(
+                                color: AppTheme.textGrey,
+                                fontSize: 13,
+                              ),
+                            ),
+                            Text(
+                              'MoneyMate User 👋',
+                              style: TextStyle(
+                                color: AppTheme.navy,
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: () {},
+                        icon: const Icon(
+                          Icons.notifications_none_rounded,
+                          color: AppTheme.navy,
+                          size: 28,
                         ),
                       ),
                     ],
-                  );
-                },
-              ),
+                  ),
 
-              const SizedBox(height: 28),
+                  const SizedBox(height: 28),
 
-              // Recent Transactions
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
                   const Text(
-                    'Recent Transactions',
+                    'My Balance',
                     style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: AppTheme.navy,
+                      fontSize: 16,
+                      color: AppTheme.textGrey,
                     ),
                   ),
-                  TextButton(
-                    onPressed: () {},
-                    child: const Text('See All'),
+
+                  const SizedBox(height: 12),
+
+                  // Balance Card
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      color: AppTheme.navy,
+                      borderRadius: BorderRadius.circular(24),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Row(
+                          children: [
+                            Icon(
+                              Icons.account_balance_wallet_outlined,
+                              color: AppTheme.mint,
+                            ),
+                            SizedBox(width: 8),
+                            Text(
+                              'Total Balance',
+                              style: TextStyle(
+                                color: Colors.white70,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            _formatCurrency(provider.balance),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 30,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        Row(
+                          children: [
+                            const Icon(
+                              Icons.trending_up,
+                              color: AppTheme.mint,
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              'Your finances at a glance',
+                              style: TextStyle(
+                                color: Colors.white.withValues(alpha: 0.8),
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
+
+                  const SizedBox(height: 24),
+
+                  // Income and Expense
+                  LayoutBuilder(
+                    builder: (context, constraints) {
+                      return Row(
+                        children: [
+                          Expanded(
+                            child: _SummaryCard(
+                              title: 'Income',
+                              amount: _formatCurrency(provider.totalIncome),
+                              icon: Icons.arrow_downward_rounded,
+                              color: Colors.green,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: _SummaryCard(
+                              title: 'Expense',
+                              amount: _formatCurrency(provider.totalExpense),
+                              icon: Icons.arrow_upward_rounded,
+                              color: AppTheme.expense,
+                            ),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+
+                  const SizedBox(height: 28),
+
+                  // Recent Transactions
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Recent Transactions',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: AppTheme.navy,
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: () {},
+                        child: const Text('See All'),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 8),
+
+                  if (recentTransactions.isEmpty)
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: const Column(
+                        children: [
+                          Icon(
+                            Icons.receipt_long_outlined,
+                            size: 42,
+                            color: AppTheme.textGrey,
+                          ),
+                          SizedBox(height: 12),
+                          Text(
+                            'No transactions yet',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: AppTheme.navy,
+                            ),
+                          ),
+                          SizedBox(height: 4),
+                          Text(
+                            'Your recent transactions will appear here.',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: AppTheme.textGrey,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  else
+                    ...recentTransactions.map(
+                      (transaction) => _TransactionTile(
+                        transaction: transaction,
+                        icon: _categoryIcon(transaction.category),
+                        formatCurrency: _formatCurrency,
+                      ),
+                    ),
                 ],
               ),
-
-              const SizedBox(height: 8),
-
-              const _TransactionTile(
-                title: 'Monthly Salary',
-                category: 'Income • Salary',
-                amount: '+ Rp 5.000.000',
-                icon: Icons.account_balance_wallet,
-                isIncome: true,
-              ),
-
-              const _TransactionTile(
-                title: 'Groceries',
-                category: 'Food • Shopping',
-                amount: '- Rp 350.000',
-                icon: Icons.shopping_basket_outlined,
-                isIncome: false,
-              ),
-
-              const _TransactionTile(
-                title: 'Freelance Project',
-                category: 'Income • Freelance',
-                amount: '+ Rp 2.000.000',
-                icon: Icons.laptop_mac,
-                isIncome: true,
-              ),
-            ],
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }
@@ -265,22 +327,20 @@ class _SummaryCard extends StatelessWidget {
 }
 
 class _TransactionTile extends StatelessWidget {
-  final String title;
-  final String category;
-  final String amount;
+  final Transaction transaction;
   final IconData icon;
-  final bool isIncome;
+  final String Function(double) formatCurrency;
 
   const _TransactionTile({
-    required this.title,
-    required this.category,
-    required this.amount,
+    required this.transaction,
     required this.icon,
-    required this.isIncome,
+    required this.formatCurrency,
   });
 
   @override
   Widget build(BuildContext context) {
+    final isIncome = transaction.type == TransactionType.income;
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(14),
@@ -300,7 +360,7 @@ class _TransactionTile extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  title,
+                  transaction.title,
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     color: AppTheme.navy,
@@ -308,7 +368,8 @@ class _TransactionTile extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  category,
+                  '${transaction.category} • '
+                  '${transaction.date.day}/${transaction.date.month}/${transaction.date.year}',
                   style: const TextStyle(
                     fontSize: 12,
                     color: AppTheme.textGrey,
@@ -317,12 +378,16 @@ class _TransactionTile extends StatelessWidget {
               ],
             ),
           ),
-          Text(
-            amount,
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 12,
-              color: isIncome ? Colors.green : AppTheme.expense,
+          const SizedBox(width: 8),
+          Flexible(
+            child: Text(
+              '${isIncome ? '+' : '-'} ${formatCurrency(transaction.amount)}',
+              textAlign: TextAlign.end,
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 12,
+                color: isIncome ? Colors.green : AppTheme.expense,
+              ),
             ),
           ),
         ],
