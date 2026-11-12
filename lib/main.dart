@@ -1,10 +1,18 @@
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
 import 'theme/app_theme.dart';
 import 'screens/dashboard_screen.dart';
+import 'providers/transaction_provider.dart';
 
 void main() {
-  runApp(const MoneyMateApp());
+  runApp(
+    ChangeNotifierProvider(
+      create: (context) => TransactionProvider(),
+      child: const MoneyMateApp(),
+    ),
+  );
 }
 
 class MoneyMateApp extends StatelessWidget {
