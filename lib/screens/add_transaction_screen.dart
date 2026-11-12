@@ -155,7 +155,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
 
                 _buildLabel('Category'),
                 DropdownButtonFormField<String>(
-                  value: _selectedCategory,
+                  initialValue: _selectedCategory,
                   decoration: _inputDecoration(
                     'Select category',
                     Icons.category_outlined,

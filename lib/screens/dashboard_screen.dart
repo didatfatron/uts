@@ -133,7 +133,6 @@ class DashboardScreen extends StatelessWidget {
               // Income and Expense
               LayoutBuilder(
                 builder: (context, constraints) {
-                  final isWide = constraints.maxWidth > 500;
 
                   return Row(
                     children: [
