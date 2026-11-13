@@ -7,7 +7,12 @@ import '../models/transaction.dart';
 import '../providers/transaction_provider.dart';
 
 class AddTransactionScreen extends StatefulWidget {
-  const AddTransactionScreen({super.key});
+  final Transaction? transaction;
+
+  const AddTransactionScreen({
+    super.key,
+    this.transaction,
+  });
 
   @override
   State<AddTransactionScreen> createState() =>
@@ -26,6 +31,8 @@ class _AddTransactionScreenState
   String _selectedCategory = 'Food';
   DateTime _selectedDate = DateTime.now();
 
+  bool _isSaving = false;
+
   final List<String> _categories = [
     'Food',
     'Transport',
@@ -35,6 +42,32 @@ class _AddTransactionScreenState
     'Salary',
     'Other',
   ];
+
+  bool get _isEditing => widget.transaction != null;
+
+  @override
+  void initState() {
+    super.initState();
+
+    final transaction = widget.transaction;
+
+    if (transaction != null) {
+      _titleController.text = transaction.title;
+      _amountController.text = transaction.amount.toString();
+      _descriptionController.text = transaction.description ?? '';
+
+      _selectedType = transaction.type == TransactionType.income
+          ? 'income'
+          : 'expense';
+
+      _selectedCategory = transaction.category;
+      _selectedDate = transaction.date;
+
+      if (!_categories.contains(_selectedCategory)) {
+        _categories.add(_selectedCategory);
+      }
+    }
+  }
 
   @override
   void dispose() {
@@ -59,17 +92,16 @@ class _AddTransactionScreenState
     }
   }
 
-  void _saveTransaction() {
-    if (!_formKey.currentState!.validate()) {
-      return;
-    }
+  Future<void> _saveTransaction() async {
+    if (!_formKey.currentState!.validate()) return;
+    if (_isSaving) return;
 
     final amount = double.parse(
       _amountController.text.trim().replaceAll(',', '.'),
     );
 
     final transaction = Transaction(
-      id: DateTime.now().microsecondsSinceEpoch.toString(),
+      id: widget.transaction?.id ?? '',
       title: _titleController.text.trim(),
       category: _selectedCategory,
       amount: amount,
@@ -82,27 +114,58 @@ class _AddTransactionScreenState
           : _descriptionController.text.trim(),
     );
 
-    Provider.of<TransactionProvider>(
-      context,
-      listen: false,
-    ).addTransaction(transaction);
+    setState(() {
+      _isSaving = true;
+    });
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Transaction saved successfully!'),
-      ),
-    );
+    try {
+      final provider = context.read<TransactionProvider>();
 
-    Navigator.pop(context);
+      if (_isEditing) {
+        await provider.updateTransaction(transaction);
+      } else {
+        await provider.addTransaction(transaction);
+      }
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            _isEditing
+                ? 'Transaction updated successfully!'
+                : 'Transaction saved successfully!',
+          ),
+        ),
+      );
+
+      Navigator.pop(context);
+    } catch (error) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to save transaction: $error'),
+          backgroundColor: AppTheme.expense,
+          duration: const Duration(seconds: 4),
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSaving = false;
+        });
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Add Transaction',
-          style: TextStyle(fontWeight: FontWeight.bold),
+        title: Text(
+          _isEditing ? 'Edit Transaction' : 'Add Transaction',
+          style: const TextStyle(fontWeight: FontWeight.bold),
         ),
       ),
       body: SingleChildScrollView(
@@ -121,7 +184,6 @@ class _AddTransactionScreenState
                 ),
               ),
               const SizedBox(height: 12),
-
               Row(
                 children: [
                   Expanded(
@@ -141,9 +203,7 @@ class _AddTransactionScreenState
                   ),
                 ],
               ),
-
               const SizedBox(height: 24),
-
               const Text(
                 'Transaction Title',
                 style: TextStyle(
@@ -153,7 +213,6 @@ class _AddTransactionScreenState
                 ),
               ),
               const SizedBox(height: 8),
-
               TextFormField(
                 controller: _titleController,
                 decoration: const InputDecoration(
@@ -168,9 +227,7 @@ class _AddTransactionScreenState
                   return null;
                 },
               ),
-
               const SizedBox(height: 20),
-
               const Text(
                 'Amount',
                 style: TextStyle(
@@ -180,7 +237,6 @@ class _AddTransactionScreenState
                 ),
               ),
               const SizedBox(height: 8),
-
               TextFormField(
                 controller: _amountController,
                 keyboardType: const TextInputType.numberWithOptions(
@@ -208,9 +264,7 @@ class _AddTransactionScreenState
                   return null;
                 },
               ),
-
               const SizedBox(height: 20),
-
               const Text(
                 'Category',
                 style: TextStyle(
@@ -220,7 +274,6 @@ class _AddTransactionScreenState
                 ),
               ),
               const SizedBox(height: 8),
-
               DropdownButtonFormField<String>(
                 initialValue: _selectedCategory,
                 decoration: const InputDecoration(
@@ -241,9 +294,7 @@ class _AddTransactionScreenState
                   }
                 },
               ),
-
               const SizedBox(height: 20),
-
               const Text(
                 'Date',
                 style: TextStyle(
@@ -253,7 +304,6 @@ class _AddTransactionScreenState
                 ),
               ),
               const SizedBox(height: 8),
-
               InkWell(
                 onTap: _selectDate,
                 child: InputDecorator(
@@ -266,9 +316,7 @@ class _AddTransactionScreenState
                   ),
                 ),
               ),
-
               const SizedBox(height: 20),
-
               const Text(
                 'Description (Optional)',
                 style: TextStyle(
@@ -278,7 +326,6 @@ class _AddTransactionScreenState
                 ),
               ),
               const SizedBox(height: 8),
-
               TextFormField(
                 controller: _descriptionController,
                 maxLines: 3,
@@ -288,14 +335,12 @@ class _AddTransactionScreenState
                   alignLabelWithHint: true,
                 ),
               ),
-
               const SizedBox(height: 30),
-
               SizedBox(
                 width: double.infinity,
                 height: 52,
                 child: ElevatedButton(
-                  onPressed: _saveTransaction,
+                  onPressed: _isSaving ? null : _saveTransaction,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppTheme.navy,
                     foregroundColor: AppTheme.white,
@@ -303,13 +348,24 @@ class _AddTransactionScreenState
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  child: const Text(
-                    'Save Transaction',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                  child: _isSaving
+                      ? const SizedBox(
+                          width: 22,
+                          height: 22,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: AppTheme.white,
+                          ),
+                        )
+                      : Text(
+                          _isEditing
+                              ? 'Update Transaction'
+                              : 'Save Transaction',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                 ),
               ),
             ],
@@ -338,10 +394,8 @@ class _AddTransactionScreenState
       ),
       label: Text(label),
       style: OutlinedButton.styleFrom(
-        backgroundColor:
-            isSelected ? AppTheme.navy : AppTheme.white,
-        foregroundColor:
-            isSelected ? AppTheme.white : AppTheme.navy,
+        backgroundColor: isSelected ? AppTheme.navy : AppTheme.white,
+        foregroundColor: isSelected ? AppTheme.white : AppTheme.navy,
         side: const BorderSide(color: AppTheme.navy),
         padding: const EdgeInsets.symmetric(vertical: 16),
         shape: RoundedRectangleBorder(
